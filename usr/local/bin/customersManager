@@ -1,0 +1,140 @@
+#!/usr/bin/ruby
+
+ENV['GEM_PATH']="/var/lib/gems/1.9.1"
+
+require 'getoptlong'
+require 'fileutils'
+
+@pathLogstash='/etc/logstash/conf.d'
+@pathTemplate="#{@pathLogstash}/template"
+@typePermit=['create', 'update', 'delete']
+@namePermit=['customer', 'url1', 'url2', 'url3', 'url4', 'url5']
+
+
+opts = GetoptLong.new(
+    ['--type', '-t', GetoptLong::REQUIRED_ARGUMENT],
+    ['--name', '-n', GetoptLong::REQUIRED_ARGUMENT],
+    ['--customer', '-c', GetoptLong::REQUIRED_ARGUMENT],
+    ['--value', '-v', GetoptLong::REQUIRED_ARGUMENT]
+)
+
+def help()
+    puts ''
+    puts "   Usage #{$0} : "
+    puts "\t--type\t| -t |\t What did you want to do ? (create/update/delete)"
+    puts "\t--customer\t| -c |\t Customer name"
+    puts "\t--name\t| -t |\t Customer name or url number"
+    puts "\t--value\t| -v |\t Value of --name"
+end
+
+opts.each do |opt, arg|
+
+    case opt 
+        when '--help'
+            help()
+            exit 1
+        when '--type'
+            @type = arg
+        when '--name'
+            @name = arg
+        when '--customer'
+            @custoName = arg
+        when '--value'
+            @value = arg
+    end
+end
+
+if ! @typePermit.include?(@type) 
+    puts 'Value of type option is forbidden'
+    help()
+    exit 1
+end
+
+if ! @namePermit.include?(@name)
+    puts 'Value of name option is forbidden'
+    help()
+    exit 1
+end
+
+if ! @value
+    puts 'value is needed to do something'
+    help()
+    exit 1
+end
+
+
+def createItem()
+    if @name == 'customer'
+        test = Dir.exist?("#{@pathLogstash}/#{@custoName}")
+        if true === test
+            puts "Customer name already exist."
+            exit 1
+        else
+            result_mkdir = Dir.mkdir("#{@pathLogstash}/#{@custoName}") 
+            if result_mkdir == 0
+                puts "Customer #{@value} has been created successfully"
+            else
+                puts "An error occured with customer directory creation"
+                exit 1
+            end
+        end
+    end
+end
+
+def updateFile(fileNameToGsub)
+    if @name =~ /url/
+        fileNameOrig = fileNameToGsub[0..-2]
+        gsubString = "<URL>"
+    else
+        fileNameOrig = fileNameToGsub
+        gsubString = "<CUSTOMER>"
+    end
+    FileUtils.copy_file("#{@pathTemplate}/#{fileNameOrig}.conf", "#{@pathLogstash}/#{@custoName}/#{fileNameToGsub}.conf")
+    f = File.read("#{@pathLogstash}/#{@custoName}/#{fileNameToGsub}.conf")
+    newFileContent = f.gsub(/#{gsubString}/, "#{@value}")
+    File.open("#{@pathLogstash}/#{@custoName}/#{fileNameToGsub}.conf", "w") {|file| file.puts newFileContent} 
+end
+
+
+def updateItem()
+    if @name =~ /url/
+        updateFile("#{@name}")
+    else 
+        puts "Option not implemented yet! Please try later..."
+        exit 1
+        oldName=@value.split(":").first
+        @value=@value.split(":").last
+        FileUtils.mv("#{@pathLogstash}/#{oldName}", "#{@pathLogstash}/#{@value}")
+        updateFile("/filter-output.conf")
+    end
+end
+
+def deleteItem()
+    if @name =~ /url/
+        if true === File.exist?("#{@pathLogstash}/#{@custoName}/#{@name}.conf")
+            FileUtils.rmtree("#{@pathLogstash}/#{@custoName}/#{@name}.conf")
+        else
+            puts "No file to remove"
+        end
+    elsif @name == "customer"
+        if true === File.exist?("#{@pathLogstash}/#{@custoName}")
+            FileUtils.rmtree("#{@pathLogstash}/#{@custoName}")
+        else
+            puts "No file to remove"
+        end
+    else
+        puts "You shoud specify what did you want to delete!"
+        exit 1
+    end
+end
+
+case @type
+    when 'create'
+        createItem()
+        updateFile("filter-output")
+    when 'update'
+        updateItem()
+    when 'delete'
+        deleteItem()
+end
+

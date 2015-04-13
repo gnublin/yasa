@@ -1,0 +1,57 @@
+#!/usr/bin/ruby
+
+ENV['GEM_PATH']="/var/lib/gems/1.9.1"
+
+
+require 'curl'
+require 'json'
+require 'pp'
+
+@url = ARGV[0]
+
+#testFile = File.exist?("/root/urls.json")
+#if true === testFile 
+#    file = File.read('/root/urls.json')
+#    fileDecoded = JSON.parse(file)
+#else
+#    puts "file doesn't exist"
+#    exit
+#end
+
+def phantomas
+    @phantomas_result = `phantomas #{@url} -R json:pretty --user-agent="ssoys - phantomas"`
+end
+
+def curb
+    @c = Curl::Easy.http_head(@url)
+    @totalTime = @c.total_time*1000
+    @connectTime = @c.connect_time*1000
+    @nsTime = @c.name_lookup_time*1000
+    @redirTime = @c.redirect_time*1000
+end
+
+
+#def curl
+#    @curl_result = `curl -w '"header":{"url_effective":"%{url_effective}","filename_effective":"%{filename_effective}","http_code":"%{http_code}","http_connect":"%{http_connect}","time_total":%{time_total},"time_namelookup":%{time_namelookup},"time_connect":%{time_connect},"time_appconnect":%{time_appconnect},"time_pretransfer":%{time_pretransfer},"time_redirect":%{time_redirect},"time_starttransfer":%{time_starttransfer},"size_download":%{size_download},"size_upload":%{size_upload},"size_header":%{size_header},"size_request":%{size_request},"speed_download":%{speed_download},"speed_upload":%{speed_upload},"content_type":"%{content_type}","num_connects":%{num_connects},"num_redirects":%{num_redirects},"redirect_url":"%{redirect_url}","ssl_verify_result":%{ssl_verify_result}}' -o /dev/null -s #{@url} -A "ssoys - curl"`
+#    @curl_result = @curl_result.gsub(/([0-9])\,([0-9])/, '\1.\2')
+#end
+
+#fileDecoded.each do |key|
+#
+#    @url = key[1]
+    tt1 = Thread.new{phantomas()}
+    tt2 = Thread.new{curb()}
+    
+    tt1.join
+    tt2.join
+    
+    
+    phantomasJson = JSON.parse(@phantomas_result)
+    phantomasJson["metrics"].store("headerTotalTime", @totalTime.round(3))
+    phantomasJson["metrics"].store("headerConnectTime", @connectTime.round(3))
+    phantomasJson["metrics"].store("nsLookupTime", @nsTime.round(3))
+    phantomasJson["metrics"].store("redirectTime", @redirTime.round(3))
+    
+    puts phantomasJson.to_json
+
+#end
