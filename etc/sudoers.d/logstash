@@ -1,0 +1,3 @@
+logstash ALL=(root) NOPASSWD: /bin/ln -s /etc/init.d/logstash-instance /etc/init.d/logstash-*
+logstash ALL=(root) NOPASSWD: /bin/mv /etc/init.d/logstash-* /etc/init.d/logstash-*
+logstash ALL=(root) NOPASSWD: /etc/init.d/logstash-* *
