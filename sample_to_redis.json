@@ -1,0 +1,2 @@
+
+redis-cli lpush customerManagement "{\"type\":\"create\",\"customer\":\"Custo1\",\"url1\":\"http://www.custo1.com/url1\"}"
