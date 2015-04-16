@@ -5,7 +5,7 @@ ENV['GEM_PATH']="/var/lib/gems/1.9.1"
 require 'getoptlong'
 require 'fileutils'
 
-@pathLogstash='/etc/logstash/conf.d'
+@pathLogstash='/etc/logstash/customers'
 @pathTemplate="#{@pathLogstash}/template"
 @typePermit=['create', 'update', 'delete']
 @namePermit=['customer', 'url1', 'url2', 'url3', 'url4', 'url5']
