@@ -70,6 +70,7 @@ def createItem()
             puts "Customer name already exist."
             exit 1
         else
+            `sudo ln -s /etc/init.d/logstash-instance /etc/init.d/logstash-#{@value}`
             result_mkdir = Dir.mkdir("#{@pathLogstash}/#{@custoName}") 
             if result_mkdir == 0
                 puts "Customer #{@value} has been created successfully"
@@ -93,6 +94,7 @@ def updateFile(fileNameToGsub)
     f = File.read("#{@pathLogstash}/#{@custoName}/#{fileNameToGsub}.conf")
     newFileContent = f.gsub(/#{gsubString}/, "#{@value}")
     File.open("#{@pathLogstash}/#{@custoName}/#{fileNameToGsub}.conf", "w") {|file| file.puts newFileContent} 
+    `sudo /etc/init.d/logstash-#{@custoName} restart`
 end
 
 
